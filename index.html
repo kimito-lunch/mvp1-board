@@ -581,6 +581,44 @@
       font-size: 13px;
     }
 
+    .result-grid {
+      display: grid;
+      gap: 6px;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+    }
+
+    .result-card {
+      background: #ffffff;
+      border: 1px solid #cfd7e3;
+      border-top: 3px solid var(--phase);
+      border-radius: 7px;
+      min-width: 0;
+      padding: 7px;
+    }
+
+    .result-label {
+      color: var(--muted);
+      font-size: 10px;
+      font-weight: 900;
+      letter-spacing: 0.03em;
+      margin-bottom: 5px;
+    }
+
+    .result-list {
+      display: grid;
+      gap: 4px;
+      margin: 0;
+      padding: 0;
+    }
+
+    .result-list span {
+      color: var(--ink);
+      display: block;
+      font-size: 11px;
+      font-weight: 800;
+      line-height: 1.35;
+    }
+
     .rules {
       background: var(--panel);
       border: 1px solid var(--line);
@@ -709,17 +747,33 @@
         id: "m-0605",
         date: "6/5（金）",
         targetDate: "2026-06-05",
-        title: "MVP1実装方式・担当分担の合意",
-        detail: "MVP1で採用する送信方式、AI生成方式、連絡先/宛先取得方式、担当分担が合意され、iOS先行/Android対応方針も確認されている。",
-        visual: { type: "lanes", title: "合意すること", lanes: [["🛠️ 実装方式", ["📤 送信", "🤖 AI", "👤 宛先"]], ["📱 対象", ["🍎 iOS", "🤔 Android判断"]]] }
+        title: "送信・AI生成・宛先取得の検証結果整理",
+        detail: "OS共有、AI生成API、連絡先/宛先取得または手入力を小さく試し、使えそうな方式、難しい方式、追加調査が必要な点が整理されている。",
+        visual: {
+          type: "results",
+          title: "週末に見えている状態",
+          columns: [
+            ["試した", ["OS共有", "AI生成API", "宛先取得"]],
+            ["わかった", ["使える方式", "難しい方式", "制約"]],
+            ["次にやる", ["採用判断", "追加調査", "チケット化"]]
+          ]
+        }
       },
       {
         id: "m-0612",
         date: "6/12（金）",
         targetDate: "2026-06-12",
-        title: "MVP1実装設計の確定",
-        detail: "送信方式、AI/API利用有無、画像解析APIの採否、連絡先取得の扱い、iOS最低サポートバージョン、ログ、同意表示、プッシュ通知採否が確定している。",
-        visual: { type: "lanes", title: "確定する設計", lanes: [["📱 アプリ", ["📤 送信", "👤 連絡先", "🔐 権限"]], ["⚙️ 基盤", ["🤖 API", "📊 ログ"]]] }
+        title: "採用方式と初期実装チケット確定",
+        detail: "送信方法、AI生成方式、宛先取得方式、写真選択・撮影、ログ、同意表示、iOS最低サポートバージョンの方針が決まり、実装チケットに分解されている。",
+        visual: {
+          type: "results",
+          title: "週末に手元にあるもの",
+          columns: [
+            ["採用方式", ["送信", "AI生成", "宛先"]],
+            ["実装チケット", ["写真", "共有", "ログ"]],
+            ["未決事項", ["保留", "担当", "期限"]]
+          ]
+        }
       },
       {
         id: "m-0619",
@@ -980,6 +1034,23 @@
                 <div class="check-item">
                   <span class="check-icon">☑</span>
                   <span>${item}</span>
+                </div>
+              `).join("")}
+            </div>
+          </div>
+        `;
+      }
+      if (visual.type === "results") {
+        return `
+          <div class="visual">
+            <div class="visual-title">${visual.title}</div>
+            <div class="result-grid">
+              ${visual.columns.map(([label, items]) => `
+                <div class="result-card">
+                  <div class="result-label">${label}</div>
+                  <div class="result-list">
+                    ${items.map(item => `<span>${item}</span>`).join("")}
+                  </div>
                 </div>
               `).join("")}
             </div>
