@@ -1,0 +1,1122 @@
+<!doctype html>
+<html lang="ja">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>MVP1 進捗ボード</title>
+  <style>
+    :root {
+      color-scheme: light;
+      --ink: #17202a;
+      --muted: #667085;
+      --line: #d7dde7;
+      --paper: #f7f8fb;
+      --panel: #ffffff;
+      --blue: #2563eb;
+      --green: #14805e;
+      --amber: #b45309;
+      --red: #c2410c;
+      --teal: #0f766e;
+      --indigo: #4f46e5;
+      --shadow: 0 10px 30px rgba(23, 32, 42, 0.08);
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      background: var(--paper);
+      color: var(--ink);
+      font-family: -apple-system, BlinkMacSystemFont, "Hiragino Sans", "Yu Gothic", "YuGothic", "Noto Sans JP", sans-serif;
+      letter-spacing: 0;
+    }
+
+    header {
+      background: #ffffff;
+      border-bottom: 1px solid var(--line);
+      padding: 24px clamp(16px, 4vw, 44px) 18px;
+      position: sticky;
+      top: 0;
+      z-index: 10;
+    }
+
+    .header-row {
+      align-items: flex-start;
+      display: flex;
+      gap: 18px;
+      justify-content: space-between;
+    }
+
+    h1 {
+      font-size: clamp(24px, 3vw, 36px);
+      line-height: 1.15;
+      margin: 0 0 8px;
+    }
+
+    .lead {
+      color: var(--muted);
+      font-size: 14px;
+      line-height: 1.7;
+      margin: 0;
+      max-width: 760px;
+    }
+
+    .summary {
+      align-items: center;
+      display: grid;
+      gap: 8px;
+      grid-template-columns: auto minmax(160px, 260px) auto;
+      min-width: min(420px, 100%);
+      padding-top: 4px;
+    }
+
+    .summary strong {
+      font-size: 28px;
+      line-height: 1;
+      white-space: nowrap;
+    }
+
+    .progress {
+      background: #e7ebf2;
+      border-radius: 999px;
+      height: 12px;
+      overflow: hidden;
+      width: 100%;
+    }
+
+    .progress span {
+      background: linear-gradient(90deg, var(--green), var(--blue));
+      display: block;
+      height: 100%;
+      transition: width 180ms ease;
+      width: 0%;
+    }
+
+    .summary small {
+      color: var(--muted);
+      font-size: 12px;
+      white-space: nowrap;
+    }
+
+    .controls {
+      align-items: center;
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      margin-top: 18px;
+    }
+
+    button, .toggle {
+      align-items: center;
+      background: #ffffff;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      color: var(--ink);
+      cursor: pointer;
+      display: inline-flex;
+      font-size: 13px;
+      font-weight: 700;
+      gap: 8px;
+      min-height: 36px;
+      padding: 8px 12px;
+    }
+
+    button:hover, .toggle:hover { border-color: #9aa6b8; }
+
+    .toggle input { accent-color: var(--blue); }
+
+    main {
+      display: grid;
+      gap: 22px;
+      padding: 22px clamp(16px, 4vw, 44px) 44px;
+    }
+
+    .milestones {
+      display: grid;
+      gap: 12px;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+    }
+
+    .milestone {
+      background: var(--panel);
+      border: 1px solid var(--line);
+      border-left: 6px solid var(--blue);
+      border-radius: 8px;
+      box-shadow: var(--shadow);
+      min-height: 122px;
+      padding: 16px;
+    }
+
+    .milestone.done {
+      border-left-color: var(--green);
+      opacity: 0.72;
+    }
+
+    .milestone.overdue {
+      border-left-color: var(--red);
+    }
+
+    .milestone.upcoming {
+      border-left-color: var(--blue);
+    }
+
+    .milestone b, .week-title b {
+      display: block;
+      font-size: 15px;
+      line-height: 1.45;
+    }
+
+    .date {
+      color: var(--muted);
+      font-size: 12px;
+      font-weight: 800;
+      margin-bottom: 8px;
+    }
+
+    .milestone p, .week-card p {
+      color: var(--muted);
+      font-size: 13px;
+      line-height: 1.65;
+      margin: 8px 0 0;
+    }
+
+    .section-title {
+      align-items: end;
+      display: flex;
+      justify-content: space-between;
+      gap: 16px;
+    }
+
+    h2 {
+      font-size: 18px;
+      margin: 0;
+    }
+
+    .legend {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      justify-content: flex-end;
+    }
+
+    .chip {
+      align-items: center;
+      background: #ffffff;
+      border: 1px solid var(--line);
+      border-radius: 999px;
+      color: var(--muted);
+      display: inline-flex;
+      font-size: 12px;
+      font-weight: 800;
+      gap: 6px;
+      padding: 5px 9px;
+    }
+
+    .dot {
+      border-radius: 999px;
+      height: 9px;
+      width: 9px;
+    }
+
+    .board {
+      display: grid;
+      gap: 14px;
+      grid-template-columns: repeat(4, minmax(240px, 1fr));
+    }
+
+    .phase-column {
+      align-content: start;
+      display: grid;
+      gap: 12px;
+      min-width: 0;
+    }
+
+    .phase-head {
+      background: var(--panel);
+      border: 1px solid var(--line);
+      border-top: 5px solid var(--phase);
+      border-radius: 8px;
+      padding: 12px;
+    }
+
+    .phase-head strong {
+      display: block;
+      font-size: 15px;
+      line-height: 1.35;
+    }
+
+    .phase-head span {
+      color: var(--muted);
+      display: block;
+      font-size: 12px;
+      margin-top: 4px;
+    }
+
+    .week-card {
+      background: var(--panel);
+      border: 1px solid var(--line);
+      border-left: 5px solid var(--phase);
+      border-radius: 8px;
+      box-shadow: var(--shadow);
+      padding: 14px;
+      transition: opacity 150ms ease, transform 150ms ease;
+    }
+
+    .week-card.done {
+      opacity: 0.58;
+    }
+
+    .week-card.current {
+      border-color: #f59e0b;
+      box-shadow: 0 0 0 3px rgba(245, 158, 11, 0.18), var(--shadow);
+      transform: translateY(-2px);
+    }
+
+    .week-card.done .week-title b {
+      text-decoration: line-through;
+      text-decoration-thickness: 2px;
+    }
+
+    .week-card.hidden {
+      display: none;
+    }
+
+    .week-top {
+      align-items: flex-start;
+      display: flex;
+      gap: 10px;
+      justify-content: space-between;
+    }
+
+    .week-title {
+      min-width: 0;
+    }
+
+    .week-title span {
+      color: var(--muted);
+      display: block;
+      font-size: 12px;
+      font-weight: 800;
+      margin-bottom: 5px;
+    }
+
+    .status {
+      border: 1px solid var(--line);
+      border-radius: 999px;
+      color: var(--muted);
+      font-size: 11px;
+      font-weight: 800;
+      padding: 4px 8px;
+      white-space: nowrap;
+    }
+
+    .week-card.done .status {
+      background: #e7f6ef;
+      border-color: #b7dfcc;
+      color: var(--green);
+    }
+
+    .week-card.current .status {
+      background: #fff7ed;
+      border-color: #fed7aa;
+      color: var(--amber);
+    }
+
+    .checkline {
+      align-items: flex-start;
+      border-top: 1px solid #eef1f5;
+      display: flex;
+      gap: 9px;
+      margin-top: 12px;
+      padding-top: 12px;
+    }
+
+    .checkline input {
+      accent-color: var(--green);
+      height: 18px;
+      margin-top: 2px;
+      width: 18px;
+    }
+
+    .checkline label {
+      color: var(--ink);
+      cursor: pointer;
+      font-size: 13px;
+      font-weight: 700;
+      line-height: 1.55;
+    }
+
+    .owners {
+      color: var(--muted);
+      font-size: 12px;
+      font-weight: 800;
+      margin-top: 10px;
+    }
+
+    .visual {
+      background: #f8fafc;
+      border: 1px solid #e5eaf1;
+      border-radius: 8px;
+      display: grid;
+      gap: 8px;
+      margin-top: 12px;
+      padding: 10px;
+    }
+
+    .visual-title {
+      color: var(--muted);
+      font-size: 11px;
+      font-weight: 900;
+      letter-spacing: 0.04em;
+    }
+
+    .flow {
+      align-items: center;
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+    }
+
+    .flow-step {
+      background: #ffffff;
+      border: 1px solid #cfd7e3;
+      border-radius: 7px;
+      color: var(--ink);
+      flex: 1 1 64px;
+      font-size: 11px;
+      font-weight: 800;
+      line-height: 1.35;
+      min-height: 34px;
+      min-width: 58px;
+      padding: 6px 7px;
+      text-align: center;
+    }
+
+    .flow-arrow {
+      color: #8a95a6;
+      font-size: 14px;
+      font-weight: 900;
+      line-height: 1;
+    }
+
+    .mini-board {
+      display: grid;
+      gap: 6px;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+
+    .mini-note {
+      background: #ffffff;
+      border: 1px solid #cfd7e3;
+      border-left: 4px solid var(--phase);
+      border-radius: 7px;
+      font-size: 11px;
+      font-weight: 800;
+      line-height: 1.35;
+      min-height: 36px;
+      padding: 7px;
+    }
+
+    .device {
+      background: #ffffff;
+      border: 2px solid #cfd7e3;
+      border-radius: 12px;
+      margin: 0 auto;
+      max-width: 210px;
+      padding: 8px;
+    }
+
+    .device-screen {
+      border: 1px solid #e0e6ef;
+      border-radius: 8px;
+      display: grid;
+      gap: 0;
+      padding: 8px;
+    }
+
+    .screen-section {
+      padding: 3px 0;
+    }
+
+    .screen-section + .screen-section {
+      border-top: 1px dashed #dde3ec;
+      margin-top: 5px;
+      padding-top: 5px;
+    }
+
+    .screen-label {
+      color: var(--muted);
+      font-size: 10px;
+      font-weight: 900;
+      letter-spacing: 0.03em;
+      margin-bottom: 3px;
+    }
+
+    .screen-text-bubble {
+      background: #eff4ff;
+      border: 1px solid #c7d7fc;
+      border-radius: 5px;
+      color: #3b4a6b;
+      font-size: 10px;
+      font-style: italic;
+      line-height: 1.45;
+      margin-bottom: 3px;
+      padding: 4px 6px;
+    }
+
+    .screen-input {
+      background: #f8fafc;
+      border: 1px solid #dde3ec;
+      border-radius: 5px;
+      color: var(--muted);
+      font-size: 10px;
+      line-height: 1.4;
+      padding: 4px 6px;
+    }
+
+    .screen-cta {
+      background: var(--blue);
+      border-radius: 5px;
+      color: #ffffff;
+      font-size: 10px;
+      font-weight: 700;
+      margin-top: 4px;
+      padding: 4px 0;
+      text-align: center;
+    }
+
+    .swimlane {
+      display: grid;
+      gap: 6px;
+      grid-template-columns: 0.72fr 1fr;
+    }
+
+    .lane-label {
+      color: var(--muted);
+      font-size: 11px;
+      font-weight: 900;
+      padding-top: 7px;
+    }
+
+    .lane-items {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 5px;
+    }
+
+    .lane-pill {
+      background: #ffffff;
+      border: 1px solid #cfd7e3;
+      border-radius: 999px;
+      font-size: 11px;
+      font-weight: 800;
+      padding: 5px 8px;
+    }
+
+    .before-after {
+      align-items: center;
+      display: grid;
+      gap: 6px;
+      grid-template-columns: 1fr auto 1fr;
+    }
+
+    .ba-col {
+      background: #ffffff;
+      border: 1px solid #cfd7e3;
+      border-radius: 7px;
+      padding: 7px 8px;
+    }
+
+    .ba-col.ba-before {
+      border-top: 3px solid #cbd5e1;
+    }
+
+    .ba-col.ba-after {
+      border-top: 3px solid var(--green);
+    }
+
+    .ba-header {
+      color: var(--muted);
+      font-size: 10px;
+      font-weight: 900;
+      letter-spacing: 0.03em;
+      margin-bottom: 4px;
+    }
+
+    .ba-header.ba-after-label {
+      color: var(--green);
+    }
+
+    .ba-text {
+      color: var(--ink);
+      font-size: 11px;
+      font-weight: 700;
+      line-height: 1.5;
+    }
+
+    .ba-arrow {
+      color: #8a95a6;
+      font-size: 16px;
+      font-weight: 900;
+      line-height: 1;
+      text-align: center;
+    }
+
+    .checklist {
+      display: grid;
+      gap: 5px;
+    }
+
+    .check-item {
+      align-items: center;
+      display: flex;
+      font-size: 11px;
+      font-weight: 700;
+      gap: 6px;
+    }
+
+    .check-icon {
+      color: var(--green);
+      flex-shrink: 0;
+      font-size: 13px;
+    }
+
+    .rules {
+      background: var(--panel);
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      display: grid;
+      gap: 10px;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      padding: 16px;
+    }
+
+    .rule {
+      border-left: 4px solid var(--teal);
+      padding-left: 12px;
+    }
+
+    .rule b {
+      display: block;
+      font-size: 14px;
+      margin-bottom: 6px;
+    }
+
+    .rule span {
+      color: var(--muted);
+      font-size: 13px;
+      line-height: 1.6;
+    }
+
+    @media (max-width: 1100px) {
+      .header-row { display: grid; }
+      .board { grid-template-columns: repeat(2, minmax(240px, 1fr)); }
+      .milestones, .rules { grid-template-columns: 1fr; }
+    }
+
+    @media (max-width: 640px) {
+      header { position: static; }
+      .board { grid-template-columns: 1fr; }
+      .summary { grid-template-columns: 1fr; }
+      .section-title { align-items: flex-start; display: grid; }
+      .legend { justify-content: flex-start; }
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <div class="header-row">
+      <div>
+        <h1>MVP1 進捗ボード</h1>
+        <p class="lead">2026年9月初旬リリースに向けて、週単位のゴールを消し込みながら管理するための共有ボードです。チェック状態はこのブラウザに保存されるため、当面は田邉の画面を正として定例で更新します。</p>
+      </div>
+      <div class="summary" aria-label="全体進捗">
+        <strong id="progressText">0%</strong>
+        <div class="progress"><span id="progressBar"></span></div>
+        <small id="progressCount">0 / 0 完了</small>
+      </div>
+    </div>
+    <div class="controls">
+      <label class="toggle"><input id="hideDone" type="checkbox"> 完了した週を隠す</label>
+      <button id="clearChecks" type="button">チェックをリセット</button>
+    </div>
+  </header>
+
+  <main>
+    <section>
+      <div class="section-title">
+        <h2>直近マイルストーン</h2>
+      </div>
+      <div class="milestones" id="milestones"></div>
+    </section>
+
+    <section>
+      <div class="section-title">
+        <h2>週次ロードマップ</h2>
+        <div class="legend">
+          <span class="chip"><span class="dot" style="background:#2563eb"></span>Ph.0 / 1</span>
+          <span class="chip"><span class="dot" style="background:#0f766e"></span>Ph.2</span>
+          <span class="chip"><span class="dot" style="background:#b45309"></span>Ph.3</span>
+          <span class="chip"><span class="dot" style="background:#4f46e5"></span>運用</span>
+        </div>
+      </div>
+      <div class="board" id="board"></div>
+    </section>
+
+    <section class="rules">
+      <div class="rule">
+        <b>毎週金曜に判定</b>
+        <span>週のゴール、未完了タスク、翌週に持ち越すリスクを確認します。</span>
+      </div>
+      <div class="rule">
+        <b>MVP1は絞る</b>
+        <span>「写真で1回のコミュニケーションを完了する」ために必要なものだけを入れます。</span>
+      </div>
+      <div class="rule">
+        <b>追加には交換条件</b>
+        <span>機能を追加する場合は、同じ工数の項目を外してリリース日を守ります。</span>
+      </div>
+      <div class="rule">
+        <b>β判定の暫定目安</b>
+        <span>送信完了率80%以上、重大な詰まり10人中2人以下、P0/P1ゼロを目安にします。</span>
+      </div>
+      <div class="rule">
+        <b>申請前チェック</b>
+        <span>アイコン、Launch Screen、Privacy Manifest、App Store Connect設定を8/28までに揃えます。</span>
+      </div>
+    </section>
+  </main>
+
+  <script>
+    const milestones = [
+      {
+        id: "m-0529",
+        date: "5/29（金）",
+        targetDate: "2026-05-29",
+        title: "送信モックアップ完成",
+        detail: "送信先は問わず、写真・文面・安全確認・共有方法選択を経て、送信または送信準備完了まで到達できる。",
+        visual: { type: "flow", title: "到達イメージ", steps: ["📷 写真", "✍️ 文面", "🛡️ 安全確認", "📤 共有", "✅ 送信準備"] }
+      },
+      {
+        id: "m-0603",
+        date: "6/3（水）",
+        targetDate: "2026-06-03",
+        title: "SNS制約・共有導線の調査完了",
+        detail: "OS共有、LINE、メール、SMS、SNS投稿前確認の制約と実装方針が整理されている。",
+        visual: { type: "board", title: "整理されるもの", items: ["📲 OS共有", "💬 LINE", "📧 メール/SMS", "🔍 SNS確認"] }
+      },
+      {
+        id: "m-0605",
+        date: "6/5（金）",
+        targetDate: "2026-06-05",
+        title: "MVP1実装方針の合意",
+        detail: "企画資料で決まっているMVP1を、どの技術方式・担当分担で作るかが合意され、iOS先行/Android対応方針も確認されている。",
+        visual: { type: "lanes", title: "合意すること", lanes: [["🛠️ 作り方", ["📤 共有", "🤖 API"]], ["📱 対象", ["🍎 iOS", "🤔 Android判断"]]] }
+      },
+      {
+        id: "m-0612",
+        date: "6/12（金）",
+        targetDate: "2026-06-12",
+        title: "MVP1実装設計の確定",
+        detail: "SNS制約調査と主要画面ワイヤーを踏まえ、共有導線、API利用有無、iOS最低サポートバージョン、ログ、同意表示、プッシュ通知採否が確定している。",
+        visual: { type: "lanes", title: "確定する設計", lanes: [["📱 アプリ", ["📤 共有", "🔐 権限"]], ["⚙️ 基盤", ["🤖 API", "📊 ログ"]]] }
+      },
+      {
+        id: "m-0619",
+        date: "6/19（金）",
+        targetDate: "2026-06-19",
+        title: "主要画面・UXフロー確定",
+        detail: "写真選択から共有完了までの画面遷移、文言、例外導線が確認済み。",
+        visual: { type: "flow", title: "確定する導線", steps: ["📷 写真", "👤 相手", "✍️ 文面", "✅ 確認", "📤 共有完了"] }
+      },
+      {
+        id: "m-0703",
+        date: "7/3（金）",
+        targetDate: "2026-07-03",
+        title: "コア機能α版完成",
+        detail: "写真選択・撮影、メッセージ生成、OS共有の基本導線が端末上で動く。",
+        visual: { type: "beforeafter", title: "α版で変わること", before: "画面遷移のみ動く（モック）", after: "📷撮影→✨生成→📤共有が実機で動く" }
+      },
+      {
+        id: "m-0724",
+        date: "7/24（金）",
+        targetDate: "2026-07-24",
+        title: "MVP1主要機能の実装完了",
+        detail: "写真選択・撮影、文面生成/編集、安全確認、OS共有、基本エラー表示が一通り実装され、既知の重大バグが管理されている。",
+        visual: { type: "beforeafter", title: "実装完了で変わること", before: "α版（コア導線のみ）", after: "📷写真・✏️編集・🛡️確認・📲共有が一通り動く" }
+      },
+      {
+        id: "m-0731",
+        date: "7/31（金）",
+        targetDate: "2026-07-31",
+        title: "β配布・ストア準備完了",
+        detail: "配布経路、テスト端末、βテストシナリオ、β招待文、フィードバックフォーム、アプリアイコン、Launch Screen、ストア掲載文言の素案が揃っている。",
+        visual: { type: "board", title: "準備対象", items: ["✈️ TestFlight", "📋 シナリオ", "🎨 アイコン", "🚀 Launch"] }
+      },
+      {
+        id: "m-0807",
+        date: "8/7（金）",
+        targetDate: "2026-08-07",
+        title: "社内β開始・外部β招待送付",
+        detail: "社内βビルドと外部β招待文が用意され、10〜20人へ招待を送れる。",
+        visual: { type: "flow", title: "β開始", steps: ["🏢 社内配布", "📨 外部招待", "▶️ 利用開始"] }
+      },
+      {
+        id: "m-0821",
+        date: "8/21（金）",
+        targetDate: "2026-08-21",
+        title: "リリース仮判定",
+        detail: "リリース前に直すもの、最終判定までに直すもの、MVP1.5以降へ回すものが分類されている。",
+        visual: { type: "lanes", title: "仮判定", lanes: [["🔧 直す", ["🚨 重大", "🤔 迷い"]], ["📅 後回し", ["💡 改善", "➕ 追加"]]] }
+      },
+      {
+        id: "m-0828",
+        date: "8/28（金）",
+        targetDate: "2026-08-28",
+        title: "最終リリース判定",
+        detail: "P0/P1バグがなく、App Store Connect設定、ストア申請素材、規約・プライバシー関連、Privacy Manifestが揃っている。",
+        visual: { type: "board", title: "判定材料", items: ["✅ P0/P1ゼロ", "⚙️ ASC設定", "🔒 Privacy", "🖼️ ストア素材"] }
+      },
+      {
+        id: "m-0904",
+        date: "9/4（金）",
+        targetDate: "2026-09-04",
+        title: "MVP1リリース目標",
+        detail: "ストア公開または審査通過待ちの状態まで到達している。",
+        visual: { type: "flow", title: "公開まで", steps: ["📝 申請", "🔍 審査", "🚀 公開"] }
+      },
+      {
+        id: "m-0930",
+        date: "9/30（水）",
+        targetDate: "2026-09-30",
+        title: "初期運用レビュー",
+        detail: "初期ユーザーの利用状況、課題、MVP1.5への示唆が整理されている。",
+        visual: { type: "lanes", title: "レビュー成果", lanes: [["📚 学び", ["👤 利用", "⚠️ 課題"]], ["➡️ 次へ", ["🎯 MVP1.5", "📅 10月計画"]]] }
+      }
+    ];
+
+    const visuals = {
+      "w-0601": { type: "lanes", title: "週末の状態", lanes: [["✅ 確認済み", ["🎭 モック", "⚠️ 制約"]], ["🎯 決定", ["🍎 iOS先行", "👥 担当"]]] },
+      "w-0608": { type: "lanes", title: "週末の状態", lanes: [["🔨 実装", ["🏠 Home", "📷 写真"]], ["📐 設計", ["📱 iOS版本", "🤖 API/ログ"]]] },
+      "w-0615": { type: "flow", title: "画面遷移とAPI", steps: ["📷 写真", "👤 相手", "🧪 API試験", "✅ 確認", "📤 共有完了"] },
+      "w-0622": { type: "beforeafter", title: "この週で変わること", before: "画面遷移のみ（モック状態）", after: "✨生成 → ✏️編集 → 🛡️安全確認が一連で動く" },
+      "w-0629": { type: "beforeafter", title: "この週で変わること", before: "機能がバラバラに動く", after: "📷撮影→✨生成→📤共有が実機で一本つながる" },
+      "w-0706": { type: "board", title: "詰まりを減らす部品", items: ["🚫 権限拒否", "📄 Info.plist", "🔍 クラッシュ監視", "🧪 テスト観点"] },
+      "w-0713": { type: "lanes", title: "品質確認の観点", lanes: [["✍️ 文面", ["😊 自然", "✏️ 直せる"]], ["🛠️ 準備", ["📱 端末", "🔑 開発者登録"]]] },
+      "w-0720": { type: "beforeafter", title: "この週で変わること", before: "コア導線のみ動く", after: "全Must機能が動き、新機能追加を止められる状態" },
+      "w-0727": { type: "checklist", title: "揃っている状態", items: ["🔨 社内β用ビルド", "📱 テスト端末", "📋 βシナリオ", "🎨 アイコン", "🚀 Launch Screen"] },
+      "w-0803": { type: "flow", title: "β運用開始", steps: ["🧪 社内テスト", "📋 不具合記録", "📨 外部招待", "📊 回収開始"] },
+      "w-0810": { type: "flow", title: "外部βと申請準備", steps: ["👥 10〜20人", "📊 送信率", "🔒 Privacy", "🖼️ 素材確認"] },
+      "w-0817": { type: "lanes", title: "仮判定の仕分け", lanes: [["📅 最終判定まで", ["🚨 重大", "📣 広告計画"]], ["🎯 MVP1.5", ["💡 改善", "➕ 追加機能"]]] },
+      "w-0824": { type: "checklist", title: "判定に必要なもの", items: ["✅ P0/P1ゼロ", "⚙️ ASC設定完了", "🔒 Privacy Manifest", "🖼️ ストア素材", "❓ FAQ"] },
+      "w-0831": { type: "flow", title: "公開までの流れ", steps: ["📝 申請", "🔍 審査対応", "🔄 再申請判断", "🚀 公開"] },
+      "w-0907": { type: "flow", title: "初期対応ループ", steps: ["📞 問い合わせ", "🔍 再現", "🔧 修正", "📢 案内"] },
+      "w-0914": { type: "lanes", title: "次フェーズ候補", lanes: [["📊 利用から", ["⚠️ 詰まり", "💫 好評"]], ["➡️ 次へ", ["🎯 MVP1.5", "💰 見積もり"]]] },
+      "w-0921": { type: "board", title: "小さく試すこと", items: ["👥 追加獲得", "🤝 紹介", "🎯 改善優先度", "📊 課題分類"] },
+      "w-0928": { type: "lanes", title: "振り返り成果物", lanes: [["📚 学び", ["👤 ユーザー", "⚙️ 運用"]], ["📅 計画", ["🔧 技術課題", "🗓️ 10月以降"]]] }
+    };
+
+    const phases = [
+      {
+        name: "Ph.0 / Ph.1",
+        period: "6月：調査、スコープ確定、コア導線",
+        color: "#2563eb",
+        weeks: [
+          ["w-0601", "6/1〜6/5", "5/29モックをレビューし、MVP1の実装方針と担当を決める", "未実装部分、SNS/共有制約、生成AI/API候補、β募集導線、ジャンさんの担当、iOS先行/Android対応、ローカライゼーション、アカウント作成有無、プレビュー動画要否が決まっている。", "トウさん、ジャンさん、田邉、社長", "2026-06-01", "2026-06-05"],
+          ["w-0608", "6/8〜6/12", "写真選択・撮影と共有導線の実装設計を固める", "アプリ基盤、写真選択・撮影導線、OS共有、APIキー/ログ基盤、画像解析APIの採否、iOS最低サポートバージョン、プッシュ通知採否、主要画面ワイヤーが確認できている。", "トウさん、田邉、社長", "2026-06-08", "2026-06-12"],
+          ["w-0615", "6/15〜6/19", "主要画面・UXフローを確定する", "画面遷移、宛先提案、メッセージ生成、エラー時文言、API試験呼び出し、β募集導線初稿が確認済み。", "トウさん、田邉", "2026-06-15", "2026-06-19"],
+          ["w-0622", "6/22〜6/26", "文面生成・編集・安全確認を実装版に近づける", "5/29モックの画面遷移だけでなく、文面候補の生成、ユーザー編集、共有前の安全確認、共有完了後の戻り先が一連で動作確認できる。", "トウさん、田邉", "2026-06-22", "2026-06-26"],
+          ["w-0629", "6/29〜7/3", "コア機能α版を完成させ、バグ管理を開始する", "基本導線が端末上で一連で動き、P0/P1/P2分類、API利用量記録、ストア素材要件、テスト観点が確認できている。", "トウさん、ジャンさん、田邉", "2026-06-29", "2026-07-03"]
+        ]
+      },
+      {
+        name: "Ph.2",
+        period: "7月：仕上げ、テスト、機能実装完了",
+        color: "#0f766e",
+        weeks: [
+          ["w-0706", "7/6〜7/10", "例外処理と初回利用導線を整える", "宛先提案、共有失敗時の表示、写真/カメラ権限拒否時UX、Info.plist文言、クラッシュ監視、エラーログ、βテストシナリオ、実機テスト観点が準備できている。", "トウさん、ジャンさん", "2026-07-06", "2026-07-10"],
+          ["w-0713", "7/13〜7/17", "文面品質と安全確認の完成度を上げる", "メッセージ生成品質、安全確認表示、β候補者確定、謝礼条件、端末手配、開発者登録要否が確認できている。", "トウさん、田邉", "2026-07-13", "2026-07-17"],
+          ["w-0720", "7/20〜7/24", "MVP1のアプリ機能を開発完了する", "写真選択・撮影、文面生成/編集、安全確認、OS共有、基本エラー表示が開発ビルド上で一通り動き、新規機能追加を止められる状態になっている。", "トウさん、ジャンさん、田邉", "2026-07-20", "2026-07-24"],
+          ["w-0727", "7/27〜7/31", "社内β用ビルドとテスト準備を完了する", "社内β用ビルド、配布経路、テスト端末、βテストシナリオ、確認観点、フィードバックフォーム、外部β招待文、アプリアイコン、Launch Screenが揃っている。", "トウさん、田邉", "2026-07-27", "2026-07-31"]
+        ]
+      },
+      {
+        name: "Ph.3 / リリース",
+        period: "8月〜9月初旬：β、判定、申請",
+        color: "#b45309",
+        weeks: [
+          ["w-0803", "8/3〜8/7", "社内βを実施し、外部β招待を開始する", "社内メンバーが実際にテストし、見つかった不具合が記録され、10〜20人の外部β候補へ招待を送れている。", "全員、田邉", "2026-08-03", "2026-08-07"],
+          ["w-0810", "8/10〜8/14", "外部βを継続し、リリース判断に必要な数値を集める", "10〜20人のβ結果、送信完了率、抵抗感、画像解析APIの費用/精度、Privacy Manifest、UGC/コミュニティ依頼先、ストア素材が確認できている。", "田邉、トウさん", "2026-08-10", "2026-08-14"],
+          ["w-0817", "8/17〜8/21", "外部βの結果を整理し、リリース仮判定を行う", "リリース前に直すもの、MVP1.5以降に回すもの、9月広告配信計画、PR/告知文が分類・確認されている。", "田邉、トウさん、社長", "2026-08-17", "2026-08-21"],
+          ["w-0824", "8/24〜8/28", "最終リリース判定を行う", "P0/P1バグがなく、リリース候補ビルド、App Store Connect設定、App Privacy、年齢区分、価格/配信地域、ストア文言、スクリーンショット、FAQ、問い合わせ導線が揃っている。", "社長、田邉、トウさん", "2026-08-24", "2026-08-28"],
+          ["w-0831", "8/31〜9/4", "MVP1を申請・公開する", "ストア申請、審査対応、リジェクト時の判断フロー、初期ユーザーへの案内、緊急修正体制が整っている。", "田邉、トウさん、社長", "2026-08-31", "2026-09-04"]
+        ]
+      },
+      {
+        name: "初期運用",
+        period: "9月：不具合対応、学びの整理、次計画",
+        color: "#4f46e5",
+        weeks: [
+          ["w-0907", "9/7〜9/11", "公開後の初期不具合と問い合わせに対応する", "公開後バグ、問い合わせ、初回体験の離脱ポイントが整理され、必要な軽微改善が進んでいる。", "トウさん、田邉", "2026-09-07", "2026-09-11"],
+          ["w-0914", "9/14〜9/18", "MVP1.5候補を整理する", "初期利用状況とインタビュー結果から、MVP1.5で対応すべき課題候補がまとまっている。", "田邉、社長", "2026-09-14", "2026-09-18"],
+          ["w-0921", "9/21〜9/25", "追加ユーザー獲得と改善優先度を検証する", "追加ユーザー獲得施策を小さく試し、課題をMust/Should/Couldに再分類できている。", "田邉", "2026-09-21", "2026-09-25"],
+          ["w-0928", "9/28〜9/30", "MVP1を振り返り、10月以降の計画を更新する", "技術課題、運用課題、初期ユーザー結果、MVP1.5スコープ案が整理されている。", "全員", "2026-09-28", "2026-09-30"]
+        ]
+      }
+    ];
+
+    const storageKey = "fotolie-mvp1-progress";
+    const saved = JSON.parse(localStorage.getItem(storageKey) || "{}");
+    const board = document.getElementById("board");
+    const milestoneRoot = document.getElementById("milestones");
+    const hideDone = document.getElementById("hideDone");
+    const progressText = document.getElementById("progressText");
+    const progressBar = document.getElementById("progressBar");
+    const progressCount = document.getElementById("progressCount");
+
+    function isDone(id) {
+      return Boolean(saved[id]);
+    }
+
+    function persist() {
+      localStorage.setItem(storageKey, JSON.stringify(saved));
+    }
+
+    function dateFromISO(value) {
+      const [year, month, day] = value.split("-").map(Number);
+      return new Date(year, month - 1, day);
+    }
+
+    function todayStart() {
+      const now = new Date();
+      return new Date(now.getFullYear(), now.getMonth(), now.getDate());
+    }
+
+    function isOverdue(item, today) {
+      return dateFromISO(item.targetDate) < today && !isDone(item.id);
+    }
+
+    function isUpcoming(item, today) {
+      return dateFromISO(item.targetDate) >= today && !isDone(item.id);
+    }
+
+    function currentWeek(startDate, endDate, today) {
+      return dateFromISO(startDate) <= today && today <= dateFromISO(endDate);
+    }
+
+    function visualHtml(visual) {
+      if (!visual) return "";
+      if (visual.type === "flow") {
+        return `
+          <div class="visual">
+            <div class="visual-title">${visual.title}</div>
+            <div class="flow">
+              ${visual.steps.map((step, index) => `
+                <div class="flow-step">${step}</div>
+                ${index < visual.steps.length - 1 ? `<div class="flow-arrow">→</div>` : ""}
+              `).join("")}
+            </div>
+          </div>
+        `;
+      }
+      if (visual.type === "board") {
+        return `
+          <div class="visual">
+            <div class="visual-title">${visual.title}</div>
+            <div class="mini-board">
+              ${visual.items.map(item => `<div class="mini-note">${item}</div>`).join("")}
+            </div>
+          </div>
+        `;
+      }
+      if (visual.type === "lanes") {
+        return `
+          <div class="visual">
+            <div class="visual-title">${visual.title}</div>
+            ${visual.lanes.map(([label, items]) => `
+              <div class="swimlane">
+                <div class="lane-label">${label}</div>
+                <div class="lane-items">
+                  ${items.map(item => `<span class="lane-pill">${item}</span>`).join("")}
+                </div>
+              </div>
+            `).join("")}
+          </div>
+        `;
+      }
+      if (visual.type === "device") {
+        const [label1, label2, label3] = visual.lines;
+        const bubble = visual.bubble || "「〇〇ちゃんの笑顔が届きますように ✨」";
+        const input  = visual.input  || "テキストを直接編集できる…";
+        const cta    = visual.cta    || "次へ →";
+        return `
+          <div class="visual">
+            <div class="visual-title">${visual.title}</div>
+            <div class="device">
+              <div class="device-screen">
+                <div class="screen-section">
+                  <div class="screen-label">${label1}</div>
+                  <div class="screen-text-bubble">${bubble}</div>
+                </div>
+                <div class="screen-section">
+                  <div class="screen-label">${label2}</div>
+                  <div class="screen-input">${input}</div>
+                </div>
+                <div class="screen-section">
+                  <div class="screen-label">${label3}</div>
+                  <div class="screen-cta">${cta}</div>
+                </div>
+              </div>
+            </div>
+          </div>
+        `;
+      }
+      if (visual.type === "checklist") {
+        return `
+          <div class="visual">
+            <div class="visual-title">${visual.title}</div>
+            <div class="checklist">
+              ${visual.items.map(item => `
+                <div class="check-item">
+                  <span class="check-icon">☑</span>
+                  <span>${item}</span>
+                </div>
+              `).join("")}
+            </div>
+          </div>
+        `;
+      }
+      if (visual.type === "beforeafter") {
+        return `
+          <div class="visual">
+            <div class="visual-title">${visual.title}</div>
+            <div class="before-after">
+              <div class="ba-col ba-before">
+                <div class="ba-header">前の週まで</div>
+                <div class="ba-text">${visual.before}</div>
+              </div>
+              <div class="ba-arrow">→</div>
+              <div class="ba-col ba-after">
+                <div class="ba-header ba-after-label">この週で</div>
+                <div class="ba-text">${visual.after}</div>
+              </div>
+            </div>
+          </div>
+        `;
+      }
+      return "";
+    }
+
+    function renderMilestones() {
+      const today = todayStart();
+      const overdue = milestones
+        .filter(item => isOverdue(item, today))
+        .sort((a, b) => dateFromISO(a.targetDate) - dateFromISO(b.targetDate));
+      const upcoming = milestones
+        .filter(item => isUpcoming(item, today))
+        .sort((a, b) => dateFromISO(a.targetDate) - dateFromISO(b.targetDate));
+      const visibleMilestones = [...overdue, ...upcoming].slice(0, 3);
+
+      if (visibleMilestones.length === 0) {
+        milestoneRoot.innerHTML = `
+          <article class="milestone done">
+            <div class="date">完了</div>
+            <b>表示対象のマイルストーンはありません</b>
+            <p>未完了のマイルストーンがなくなっています。次の計画を追加してください。</p>
+          </article>
+        `;
+        return;
+      }
+
+      milestoneRoot.innerHTML = visibleMilestones.map(item => `
+        <article class="milestone ${isDone(item.id) ? "done" : ""} ${isOverdue(item, today) ? "overdue" : "upcoming"}" data-id="${item.id}">
+          <div class="date">${item.date}</div>
+          <b>${item.title}</b>
+          <p>${item.detail}</p>
+          ${visualHtml(item.visual)}
+          <div class="checkline">
+            <input id="${item.id}" type="checkbox" ${isDone(item.id) ? "checked" : ""}>
+            <label for="${item.id}">完了</label>
+          </div>
+        </article>
+      `).join("");
+    }
+
+    function renderBoard() {
+      const today = todayStart();
+      board.innerHTML = phases.map(phase => `
+        <div class="phase-column" style="--phase:${phase.color}">
+          <div class="phase-head">
+            <strong>${phase.name}</strong>
+            <span>${phase.period}</span>
+          </div>
+          ${phase.weeks.map(([id, date, goal, condition, owners, startDate, endDate]) => {
+            const isCurrent = currentWeek(startDate, endDate, today);
+            return `
+            <article class="week-card ${isDone(id) ? "done" : ""} ${isCurrent ? "current" : ""}" data-id="${id}">
+              <div class="week-top">
+                <div class="week-title">
+                  <span>${date}</span>
+                  <b>${goal}</b>
+                </div>
+                <div class="status">${isDone(id) ? "完了" : isCurrent ? "今週" : "未完了"}</div>
+              </div>
+              <p>${condition}</p>
+              ${visualHtml(visuals[id])}
+              <div class="owners">担当・確認：${owners}</div>
+              <div class="checkline">
+                <input id="${id}" type="checkbox" ${isDone(id) ? "checked" : ""}>
+                <label for="${id}">この週のゴールを完了</label>
+              </div>
+            </article>
+          `}).join("")}
+        </div>
+      `).join("");
+    }
+
+    function updateProgress() {
+      const ids = [
+        ...milestones.map(item => item.id),
+        ...phases.flatMap(phase => phase.weeks.map(week => week[0]))
+      ];
+      const done = ids.filter(id => isDone(id)).length;
+      const percent = ids.length ? Math.round(done / ids.length * 100) : 0;
+      progressText.textContent = `${percent}%`;
+      progressBar.style.width = `${percent}%`;
+      progressCount.textContent = `${done} / ${ids.length} 完了`;
+    }
+
+    function applyFilter() {
+      document.querySelectorAll(".week-card").forEach(card => {
+        card.classList.toggle("hidden", hideDone.checked && card.classList.contains("done"));
+      });
+    }
+
+    function rerender() {
+      renderMilestones();
+      renderBoard();
+      updateProgress();
+      applyFilter();
+    }
+
+    document.addEventListener("change", event => {
+      if (event.target.matches("input[type='checkbox'][id^='w-'], input[type='checkbox'][id^='m-']")) {
+        saved[event.target.id] = event.target.checked;
+        if (!event.target.checked) delete saved[event.target.id];
+        persist();
+        rerender();
+      }
+      if (event.target === hideDone) applyFilter();
+    });
+
+    document.getElementById("clearChecks").addEventListener("click", () => {
+      if (!confirm("すべてのチェックをリセットしますか？")) return;
+      Object.keys(saved).forEach(key => delete saved[key]);
+      persist();
+      rerender();
+    });
+
+    rerender();
+  </script>
+</body>
+</html>
